@@ -117,9 +117,8 @@ function updateInventory(inventoryItem) {
             if (err) throw err;
 
             // console.log(chosenItem.name);
-            console.log("============================================");
-            console.log("============================================");
-            console.log("============================================\n");
+            console.log("====================================");
+            console.log("====================================\n");
 
 
 
@@ -134,7 +133,9 @@ function checkInventory(productID) {
 
     connection.query(`SELECT * FROM products WHERE item_id = ${chosenItem.id}`, function (err, response) {
         console.log(`Displaying Inventory for ${chosenItem.name}`)
+        console.log("====================================");
         console.log(response)
+        console.log("====================================\n");
 
     });
     connection.end();
