@@ -1,4 +1,3 @@
-
 // setting npms and constructor 
 var inquirer = require('inquirer');
 var mysql = require('mysql');
@@ -24,14 +23,12 @@ var connection = mysql.createConnection({
 
 // main shopping function
 function shop() {
-    inquirer.prompt([
-        {
-            type: "list",
-            name: "name",
-            message: "What item would you like to buy?",
-            choices: ["Potion", "SuperPotion", "HyperPotion", "Sword", "Dagger", "YoloHammer", "Boots", "Nikes", "Adidas", "GoldenSpatula"]
-        }
-    ]).then(function (product) {
+    inquirer.prompt([{
+        type: "list",
+        name: "name",
+        message: "What item would you like to buy?",
+        choices: ["Potion", "SuperPotion", "HyperPotion", "Sword", "Dagger", "YoloHammer", "Boots", "Nikes", "Adidas", "GoldenSpatula"]
+    }]).then(function (product) {
 
         var item = product.name;
 
@@ -45,7 +42,8 @@ function shop() {
 var SQLcmd = 'SELECT * FROM products';
 
 var chosenItem = "";
-
+var quantityBought;
+var itemID;
 // function to check if product exists
 function checkProductExists(item) {
     connection.query(SQLcmd, function (err, response) {
@@ -62,26 +60,34 @@ function checkProductExists(item) {
         console.log(`We have ${chosenItem.stock} ${chosenItem.name}(s) in stock!`)
         checkProductQuantity();
     });
-    connection.end();
+    // connection.end();
 }
 
 
 function checkProductQuantity() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "quantity",
-            message: "How many do you want to buy?"
+    inquirer.prompt([{
+        type: "input",
+        name: "quantity",
+        message: "How many do you want to buy?\n"
 
+    }]).then(function (item) {
+        quantityBought = item.quantity;
+
+        if (chosenItem.stock === 0) {
+            console.log(`Sorry we are all out of ${chosenItem.name}!`)
+            console.log(`Please choose something else!\n`)
+
+            shop();
+            
         }
-    ]).then(function (item) {
-        var amount = item.quantity;
-        if (amount <= chosenItem.stock) {
-            console.log(`You just bought ${amount} ${chosenItem.name}(s)`)
-            // transaction(chosenItem.name);
-        }
-        else {
-            console.log(`Sorry we only have ${chosenItem.stock} left!`)
+
+        else if (quantityBought <= chosenItem.stock) {
+            console.log(`You just bought ${quantityBought} ${chosenItem.name}(s)\n`)
+
+            updateInventory(chosenItem.name);
+
+        } else {
+            console.log(`Sorry we have ${chosenItem.stock} left!\n`)
             checkProductQuantity()
         }
 
@@ -91,41 +97,47 @@ function checkProductQuantity() {
 };
 
 
-var SQLbuyCMD = `UPDATE products SET ? WHERE ?;`;
+var SQLbuyCMD = `UPDATE products SET ? WHERE ?`;
 
-function transaction(chosenItem) {
+function updateInventory(inventoryItem) {
+
+    console.log('Updating inventory for ' + chosenItem.name + "...");
+    // console.log(chosenItem.stock);
     connection.query(SQLbuyCMD,
         // checks database for item
-        [
-            {
-                stock_quantity: - amount
+        [{
+                stock_quantity: chosenItem.stock - quantityBought
             },
             {
-                product_name: `${chosenItem.name}`
+                product_name: chosenItem.name
             }
         ],
 
         function (err, response) {
-            console.log(response.affectedRows);
+            if (err) throw err;
+
+            // console.log(chosenItem.name);
+            console.log("============================================");
+            console.log("============================================");
+            console.log("============================================\n");
+
 
 
         });
 
+    checkInventory();
 
+    // connection.end();
+}
+
+function checkInventory(productID) {
+
+    connection.query(`SELECT * FROM products WHERE item_id = ${chosenItem.id}`, function (err, response) {
+        console.log(`Displaying Inventory for ${chosenItem.name}`)
+        console.log(response)
+
+    });
     connection.end();
 }
 
-
-
 shop();
-
-
-
-
-
-
-
-
-
-
-
