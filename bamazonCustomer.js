@@ -57,8 +57,22 @@ function checkProductExists(item) {
                 break;
             }
         }
-        console.log(`We have ${chosenItem.stock} ${chosenItem.name}(s) in stock!`)
-        checkProductQuantity();
+
+        if (chosenItem.stock === 0) {
+            console.log("====================================");
+            console.log(`Sorry we are all out of ${chosenItem.name}s!`)
+            console.log(`Please choose something else!`)
+            console.log("====================================\n");
+
+            shop();
+
+        } else {
+            console.log(`We have ${chosenItem.stock} ${chosenItem.name}(s) in stock!`)
+            console.log(`Each ${chosenItem.name} costs $${chosenItem.price}.`)
+
+            checkProductQuantity();
+        }
+
     });
     // connection.end();
 }
@@ -73,22 +87,22 @@ function checkProductQuantity() {
     }]).then(function (item) {
         quantityBought = item.quantity;
 
-        if (chosenItem.stock === 0) {
-            console.log(`Sorry we are all out of ${chosenItem.name}!`)
-            console.log(`Please choose something else!\n`)
+        if (item.quantity == 0) {
+            console.log("====================================");
+            console.log(`Lets choose another item!`)
+            console.log("====================================\n");
 
             shop();
-            
-        }
-
-        else if (quantityBought <= chosenItem.stock) {
+        } else if (quantityBought <= chosenItem.stock) {
             console.log(`You just bought ${quantityBought} ${chosenItem.name}(s)\n`)
 
             updateInventory(chosenItem.name);
 
-        } else {
-            console.log(`Sorry we have ${chosenItem.stock} left!\n`)
+        } else if (quantityBought > chosenItem.stock) {
+            console.log(`Sorry we only have ${chosenItem.stock} left!\n`)
             checkProductQuantity()
+        } else {
+            shop()
         }
 
 
@@ -100,7 +114,6 @@ function checkProductQuantity() {
 var SQLbuyCMD = `UPDATE products SET ? WHERE ?`;
 
 function updateInventory(inventoryItem) {
-
     console.log('Updating inventory for ' + chosenItem.name + "...");
     // console.log(chosenItem.stock);
     connection.query(SQLbuyCMD,
@@ -116,6 +129,8 @@ function updateInventory(inventoryItem) {
         function (err, response) {
             if (err) throw err;
 
+            // update to constructor object
+            chosenItem.stock = chosenItem.stock - quantityBought;
             // console.log(chosenItem.name);
             console.log("====================================");
             console.log("====================================\n");
@@ -132,13 +147,14 @@ function updateInventory(inventoryItem) {
 function checkInventory(productID) {
 
     connection.query(`SELECT * FROM products WHERE item_id = ${chosenItem.id}`, function (err, response) {
-        console.log(`Displaying Inventory for ${chosenItem.name}`)
+        console.log(`Displaying Details for ${chosenItem.name}`)
         console.log("====================================");
-        console.log(response)
+        console.log(chosenItem);
         console.log("====================================\n");
 
     });
     connection.end();
 }
+
 
 shop();
